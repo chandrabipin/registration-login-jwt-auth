@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,6 +62,8 @@ public class UsersControllers {
 	 * @return
 	 */
     @GetMapping(value="/{userId}", produces= {MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML})
+    @PreAuthorize("principal == #userId")//if its same user
+    //@PostAuthorize("principal == returnObject.body.userId")
     public ResponseEntity<UserResponseModel> getUser(@PathVariable("userId") String userId){
     	UserDto userDto = usersService.getUserByUserId(userId);
     	UserResponseModel userRespModel = new ModelMapper().map(userDto, UserResponseModel.class);

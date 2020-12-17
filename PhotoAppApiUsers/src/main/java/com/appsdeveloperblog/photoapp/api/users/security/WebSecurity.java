@@ -3,7 +3,9 @@ package com.appsdeveloperblog.photoapp.api.users.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -11,6 +13,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.appsdeveloperblog.photoapp.api.users.service.UsersService;
 
+@EnableGlobalMethodSecurity(prePostEnabled=true)//pre and post auth will be anabled
 @Configuration
 @EnableWebSecurity
 public class WebSecurity extends WebSecurityConfigurerAdapter{
@@ -32,9 +35,14 @@ public class WebSecurity extends WebSecurityConfigurerAdapter{
 	protected void configure(HttpSecurity http) throws Exception {
 		http.csrf().disable();
 		//http.authorizeRequests().antMatchers("/users/**").permitAll();
-		http.authorizeRequests().antMatchers("/**").hasIpAddress(env.getProperty("zuulapigateway.ip"))
+		//http.authorizeRequests().antMatchers("/**").hasIpAddress(env.getProperty("zuulapigateway.ip"))
+		http.authorizeRequests()
+		.antMatchers(HttpMethod.POST, "/users").hasIpAddress(env.getProperty("zuulapigateway.ip"))// no auth is req
+		.antMatchers("/h2-console/**").permitAll() // no auth is req
+		.anyRequest().authenticated() // all other url will need to be authenticated
 		.and()
-		.addFilter(getAuthenticationFilter());
+		.addFilter(getAuthenticationFilter())
+		.addFilter(new AuthorizationFilter(authenticationManager(), env));
 		http.headers().frameOptions().disable();//This is done for h2-console ui.
 	}
 
